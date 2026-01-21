@@ -38,13 +38,24 @@ export const handleCreateTask = async (req, res) => {
 export const handleUpdateTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
-    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    if (!task)
+      return res.status(404).json({ message: "Task not found" });
 
     if (req.user.role === "employee") {
-      if (req.body.status) task.status = req.body.status;
-    } else {
+      if (task.assignedTo.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: "Not allowed" });
+      }
+
+      if (req.body.status) {
+        task.status = req.body.status;
+      }
+    }
+
+    if (req.user.role === "admin") {
       const { title, description, assignedTo, status, priority, dueDate } =
         req.body;
+
       if (title) task.title = title;
       if (description) task.description = description;
       if (assignedTo) task.assignedTo = assignedTo;
@@ -52,12 +63,16 @@ export const handleUpdateTask = async (req, res) => {
       if (priority) task.priority = priority;
       if (dueDate) task.dueDate = dueDate;
     }
+
     const updatedTask = await task.save();
+    await updatedTask.populate("assignedTo", "name email");
+
     res.json(updatedTask);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 export const handleDeleteTask = async (req, res) => {
   try {

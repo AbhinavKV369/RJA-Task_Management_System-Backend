@@ -1,13 +1,22 @@
 import User from "../models/User.js";
+import generateToken from "../services/token.js";
 
 export const handleLoginUser = async (req, res, next) => {
   const { email, password } = req.body;
+
   try {
-    const user = await User.findOne({ email });
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password required" });
+    }
+
+    // Convert email to lowercase for matching
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) return res.status(401).json({ message: "Invalid credentials" });
+
     const isMatch = await user.matchPassword(password);
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
+
     res.json({
       _id: user._id,
       name: user.name,

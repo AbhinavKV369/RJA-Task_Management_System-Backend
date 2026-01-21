@@ -1,24 +1,23 @@
+import bcrypt from "bcryptjs";
 import User from "../models/User.js";
-import { hashPassword } from "../services/hashing.js";
+import { hashPassword } from "../services/hashing.js"
 
 export const handleGetEmployees = async (req, res, next) => {
   try {
     const employees = await User.find({ role: "employee" }).select("-password");
     res.json(employees);
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
 export const handleGetEmployee = async (req, res, next) => {
   try {
-    const employee = await User.findById(req.params.id).select("-password");
-    if (!employee) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    res.json(employee);
-  } catch (error) {
-    next(error);
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user);
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -26,68 +25,57 @@ export const handleCreateEmployee = async (req, res, next) => {
   const { name, email, password } = req.body;
 
   try {
-    const exists = await User.findOne({ email });
-    if (exists) {
+    if (await User.findOne({ email: email.toLowerCase() }))
       return res.status(400).json({ message: "Email already exists" });
-    }
 
-    const newEmployee = await User.create({
+
+    const user = await User.create({
       name,
-      email,
-      password: await hashPassword(password),
+      email: email.toLowerCase(),
+      password,
       role: "employee",
     });
 
     res.status(201).json({
-      _id: newEmployee._id,
-      name: newEmployee.name,
-      email: newEmployee.email,
-      role: newEmployee.role,
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
     });
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
 export const handleUpdateEmployee = async (req, res, next) => {
-  const { name, email, password } = req.body;
-
   try {
-    const employee = await User.findById(req.params.id);
-    if (!employee) {
-      return res.status(404).json({ message: "User not found" });
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    Object.assign(user, req.body);
+
+    if (req.body.password) {
+      user.password = await bcrypt.hash(req.body.password, 10);
     }
 
-    if (name) employee.name = name;
-    if (email) employee.email = email;
-    if (password) {
-      employee.password = await hashPassword(password);
-    }
-
-    const updatedEmployee = await employee.save();
+    const updated = await user.save();
 
     res.json({
-      _id: updatedEmployee._id,
-      name: updatedEmployee.name,
-      email: updatedEmployee.email,
-      role: updatedEmployee.role,
+      _id: updated._id,
+      name: updated.name,
+      email: updated.email,
+      role: updated.role,
     });
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
 export const handleDeleteEmployee = async (req, res, next) => {
   try {
-    const employee = await User.findById(req.params.id);
-    if (!employee) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    await employee.deleteOne();
-
-    res.json({ message: "Employee removed successfully" });
-  } catch (error) {
-    next(error);
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: "Employee deleted successfully" });
+  } catch (err) {
+    next(err);
   }
 };
