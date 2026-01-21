@@ -11,6 +11,7 @@ export const handleGetEmployees = async (req, res, next) => {
   }
 };
 
+
 export const handleGetEmployee = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
