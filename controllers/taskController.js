@@ -76,11 +76,17 @@ export const handleUpdateTask = async (req, res) => {
 
 export const handleDeleteTask = async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
-    if (!task) return res.status(404).json({ message: "Task not found" });
-    await task.remove();
-    res.json({ message: "Task removed successfully" });
+    const { id } = req.params;
+
+    const deletedTask = await Task.findByIdAndDelete(id);
+
+    if (!deletedTask) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    res.json({ message: "Task deleted successfully" });
   } catch (error) {
+    console.error("Delete Task Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

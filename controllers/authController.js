@@ -9,7 +9,6 @@ export const handleLoginUser = async (req, res, next) => {
       return res.status(400).json({ message: "Email and password required" });
     }
 
-    // Convert email to lowercase for matching
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
