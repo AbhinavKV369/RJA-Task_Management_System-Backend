@@ -38,6 +38,7 @@ bcryptjs Password hashing
 dotenv Environment variables
 
 📁 Folder Structure
+
 backend/
 │
 ├── controllers/
