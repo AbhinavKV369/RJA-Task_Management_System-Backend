@@ -58,7 +58,9 @@ Mongoose	ODM
 JWT	Authentication
 bcryptjs	Password hashing
 dotenv	Environment variables
+
 📁 Folder Structure
+
 backend/
 │
 ├── controllers/
